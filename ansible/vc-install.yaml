@@ -1,0 +1,28 @@
+- hosts: vc_hosts
+  remote_user: ubuntu
+  vars:
+    ansible_connection: community.aws.aws_ssm
+    ansible_aws_ssm_region: ap-south-1
+    vc_maintenance_email: "narsimachilkuri237@gmail.com"
+    turn_server: "turn.aieze.in"
+    turn_server_secret: "f167c5441530592cfe737811f0145c9e"
+  tasks:
+    - name: Install Certbot
+      ansible.builtin.apt:
+        name: certbot
+        state: present
+
+    - name: Install BBB with Let's Encrypt certificate
+      shell: wget -qO- https://ubuntu.bigbluebutton.org/bbb-install-2.5.sh | bash -s -- -v focal-250 -s {{ vc_domain }}  -e {{ vc_maintenance_email }} -c {{ turn_server }}:{{ turn_server_secret }}
+      become: true
+
+    - name: Remove BBB Demo
+      ansible.builtin.apt:
+        name: bbb-demo
+        state: absent
+      notify: Restart Bigbluebutton
+
+  handlers:
+    - name: Restart Bigbluebutton
+      command: bbb-conf --restart
+      become: true
