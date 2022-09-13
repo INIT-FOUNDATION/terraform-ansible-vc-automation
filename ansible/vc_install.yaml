@@ -1,0 +1,41 @@
+- hosts: all
+  gather_facts: yes
+  become: yes
+  vars:
+    ansible_aws_ssm_timeout: 180
+    ansible_aws_ssm_profile: default
+    ansible_connection: aws_ssm
+    ansible_aws_ssm_region: ap-south-1
+    ansible_aws_ssm_bucket_name: aieze-prod
+    vc_maintenance_email: "narsimachilkuri237@gmail.com"
+    turn_server: "turn.aieze.in"
+    turn_server_secret: "f167c5441530592cfe737811f0145c9e"
+
+  tasks:
+    - name: Install BBB with Let's Encrypt certificate
+      shell: wget -qO- https://ubuntu.bigbluebutton.org/bbb-install-2.5.sh | bash -s -- -v focal-250 -s {{ vc_domain }}  -e {{ vc_maintenance_email }} -c {{ turn_server }}:{{ turn_server_secret }}
+      become: true
+
+    - name: Remove BBB Demo
+      ansible.builtin.apt:
+        name: bbb-demo
+        state: absent
+
+    - name: Copy configuration files 
+      copy: src={{ item.src }} dest={{ item.dest }}
+      with_items:
+      - { src: '../vc_config/settings.yml', dest: '/usr/share/meteor/bundle/programs/server/assets/app/config/settings.yml' }
+      - { src: '../vc_config/conference.conf.xml', dest: '/opt/freeswitch/conf/autoload_configs/conference.conf.xml' }
+
+    - name: Replace Domain in settings.yaml
+      replace:
+        path: /usr/share/meteor/bundle/programs/server/assets/app/config/settings.yaml
+        regexp: 'domain_name'
+        replace: '{{ vc_domain }}'
+      notify: 
+      - Restart Bigbluebutton
+
+  handlers:
+    - name: Restart Bigbluebutton
+      command: bbb-conf --restart
+      become: true

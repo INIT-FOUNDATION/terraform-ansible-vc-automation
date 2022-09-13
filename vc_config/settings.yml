@@ -206,7 +206,7 @@ public:
   externalVideoPlayer:
     enabled: false
   kurento:
-    wsUrl: wss://<domain_name>/bbb-webrtc-sfu
+    wsUrl: wss://domain_name/bbb-webrtc-sfu
     # Valid for video-provider. Time (ms) before its WS connection times out
     # and tries to reconnect.
     wsConnectionTimeout: 4000
@@ -478,7 +478,7 @@ public:
     hidePresentation: true
     showParticipantsOnLogin: true
   pads:
-    url: https://<domain_name>/pad
+    url: https://domain_name/pad
     cookie:
       path: /
       sameSite: None
@@ -761,7 +761,7 @@ public:
       - coffeeshop.jpg
       - board.jpg
   note:
-    url: https://<domain_name>/pad
+    url: https://domain_name/pad
 private:
   analytics:
     includeChat: true
