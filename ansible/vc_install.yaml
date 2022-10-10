@@ -14,7 +14,7 @@
 
   tasks:
     - name: Install BBB with Let's Encrypt certificate
-      shell: wget -qO- https://ubuntu.bigbluebutton.org/bbb-install-2.6.sh | sudo bash -s -- -w -v focal-260 -s {{ vc_domain }} -e {{ vc_maintenance_email }} -w -c {{ turn_server }}:{{ turn_server_secret }}
+      shell: wget -qO- https://ubuntu.bigbluebutton.org/bbb-install-2.6.sh | sudo bash -s -- -w -v focal-260 -s {{ vc_domain }} -e {{ vc_maintenance_email }} -c {{ turn_server }}:{{ turn_server_secret }}
       become: true
 
     - name: Remove BBB Demo
