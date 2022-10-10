@@ -1,0 +1,6 @@
+servers:
+  {% for vc_server in vc_servers %}
+  - url: {{ vc_domain }}
+    secret: {{ vc_secret }}
+  {% endfor %}
+ 

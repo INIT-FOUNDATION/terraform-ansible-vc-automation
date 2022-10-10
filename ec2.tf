@@ -31,10 +31,19 @@ resource "aws_instance" "vc" {
   
   tags = {
     Name = "${var.app_name}-vc-${each.key}-${var.env}"
-    domain = "vc${each.key}.${var.zone_name}"
+    domain = "vc${each.key}${random_string.priority.result}.${var.zone_name}"
     vc_server = true
     Stack = "PROD"
   }
+}
+
+
+resource "random_string" "priority" {
+  length = 5
+  special = false
+  lower = true
+  upper = false
+  numeric = false
 }
 
 resource "local_file" "hosts_cfg" {

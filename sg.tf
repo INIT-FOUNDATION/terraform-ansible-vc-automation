@@ -27,7 +27,7 @@ resource "aws_security_group" "vc" {
     description      = "UDP"
     from_port        = 16384
     to_port          = 32768
-    protocol         = "tcp"
+    protocol         = "udp"
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
