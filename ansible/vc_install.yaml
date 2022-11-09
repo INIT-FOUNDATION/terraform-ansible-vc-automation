@@ -1,6 +1,5 @@
 - hosts: all
   gather_facts: yes
-  become: yes
   vars:
     vc_servers: []
     ansible_aws_ssm_timeout: 3000
@@ -11,6 +10,10 @@
     vc_maintenance_email: "narsimachilkuri237@gmail.com"
     turn_server: "turn.aieze.in"
     turn_server_secret: "f167c5441530592cfe737811f0145c9e"
+    branch_name: feature/telemedicine
+    git_username: narsimachilkuri-at-166274191221
+    git_password: VO4bfY7r316OiKVwAzGiiMfruM8hEV0Da3%2FdCRktDTY%3D
+    git_repo_name: telemedicine-bbb
 
   tasks:
     - name: Install BBB with Let's Encrypt certificate
@@ -21,14 +24,52 @@
       ansible.builtin.apt:
         name: bbb-demo
         state: absent
-      notify:
-      - Restart Bigbluebutton
+      become: true
+    
+    - name: Clone Aieze BBB
+      shell: git clone https://{{ git_username }}:{{ git_password }}@git-codecommit.ap-south-1.amazonaws.com/v1/repos/{{ git_repo_name }} /home/ubuntu/{{ git_repo_name }}
 
-        #- name: Copy configuration files 
-        #copy: src={{ item.src }} dest={{ item.dest }}
-        #with_items:
-        #- { src: '../vc_config/settings.yml', dest: '/usr/share/meteor/bundle/programs/server/assets/app/config/settings.yml' }
-        #- { src: '../vc_config/conference.conf.xml', dest: '/opt/freeswitch/conf/autoload_configs/conference.conf.xml' }
+    - name: Change Kurento wsUrl
+      shell: yq w -i /home/ubuntu/{{ git_repo_name }}/bigbluebutton-html5/private/config/settings.yml 'public.kurento.wsUrl' wss://{{ vc_domain }}/bbb-webrtc-sfu
+
+    - name: Install Meteor
+      shell: curl https://install.meteor.com/ | sh
+
+    - name: Deploy Latest Aieze BBB code
+      shell: bash /home/ubuntu/{{ git_repo_name }}/bigbluebutton-html5/deploy_to_usr_share.sh
+      become: true
+
+    - name: Replacing Favicon
+      copy: src={{ item.src }} dest={{ item.dest }}
+      with_items:
+      - { src: 'assets/images/favicon.ico', dest: '/var/www/bigbluebutton-default/assets/favicon.ico' }
+      become: true
+    
+    - name: Removing Default Presentation
+      shell: rm /var/www/bigbluebutton-default/assets/default.pdf
+      become: true
+        
+        #- name: Install BBB Webhooks
+        #ansible.builtin.apt:
+        #name: bbb-webhooks
+        #state: present
+
+    - name: Take Backup of Audio Conference File
+      shell: cp /opt/freeswitch/conf/autoload_configs/conference.conf.xml /opt/freeswitch/conf/autoload_configs/conference.conf.xml.bak
+      become: true
+
+    - name: Copy Audio conference file
+      copy: src={{ item.src }} dest={{ item.dest }}
+      with_items:
+      - { src: '../vc_config/conference.conf.xml', dest: '/opt/freeswitch/conf/autoload_configs/conference.conf.xml' }
+      become: true
+
+    - name: Replace Content of Sip Nginx
+      shell: sed -i 's/http:/https:/g; s/5066/7443/g' /usr/share/bigbluebutton/nginx/sip.nginx
+      become: true
+      notify:
+      - Restart Freeswitch
+      - Restart Bigbluebutton
 
         #- name: Replace Domain in settings.yaml
         #replace:
@@ -57,4 +98,8 @@
   handlers:
     - name: Restart Bigbluebutton
       command: bbb-conf --restart
+      become: true
+
+    - name: Restart Freeswitch
+      command: service freeswitch restart
       become: true

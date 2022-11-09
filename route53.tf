@@ -7,8 +7,8 @@ resource "aws_route53_record" "vc" {
   ttl     = 300
   records = [aws_eip.vc[each.key].public_ip]
 
-  #provisioner "local-exec" {
-  #  command = "ansible-playbook -i ansible/inventory/hosts.cfg ansible/vc_install.yaml  -vvv"
-  #}
+  provisioner "local-exec" {
+    command = "ansible-playbook -i ansible/inventory/hosts.cfg ansible/vc_install.yaml  -vvv"
+  }
 
 }

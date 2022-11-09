@@ -52,7 +52,9 @@ resource "local_file" "hosts_cfg" {
     {
       vc_servers = [for vc_server in aws_instance.vc : {
     				instance_id = vc_server.id, 
-    				domain = vc_server.tags_all.domain
+    				domain = vc_server.tags_all.domain,
+				env = lower(vc_server.tags_all.Stack)
+										
       }]
     }
   )
