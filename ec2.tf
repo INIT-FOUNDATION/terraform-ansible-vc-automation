@@ -1,4 +1,5 @@
 resource "random_integer" "subnet_index" {
+  for_each = toset(split(",", join(",",range(1,var.servers_count+1))))
   min = 0
   max = 2
 }
@@ -11,7 +12,7 @@ resource "aws_instance" "vc" {
   key_name               = var.key_name
   monitoring             = false
   vpc_security_group_ids = [aws_security_group.vc[each.key].id]
-  subnet_id              = var.subnet_ids[random_integer.subnet_index.result]
+  subnet_id              = var.subnet_ids[random_integer.subnet_index[each.key].result]
   iam_instance_profile   = var.iam_instance_profile
   user_data              = <<-EOT
   #!/bin/bash
@@ -30,8 +31,8 @@ resource "aws_instance" "vc" {
   }
   
   tags = {
-    Name = "${var.app_name}-vc-${each.key}-${var.env}"
-    domain = "vc${each.key}${random_string.priority.result}.${var.zone_name}"
+    Name = "${var.app_name}-vc-${random_string.priority[each.key].result}-${var.env}"
+    domain = "${var.app_name}${random_string.priority[each.key].result}.${var.zone_name}"
     vc_server = true
     Stack = "PROD"
   }
@@ -39,6 +40,7 @@ resource "aws_instance" "vc" {
 
 
 resource "random_string" "priority" {
+  for_each = toset(split(",", join(",",range(1,var.servers_count+1))))
   length = 5
   special = false
   lower = true
