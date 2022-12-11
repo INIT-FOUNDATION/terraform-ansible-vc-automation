@@ -29,7 +29,8 @@ resource "aws_instance" "vc" {
       encrypted   = true
       kms_key_id  = var.root_volume_kms_key_arn
   }
-  
+ 
+ 
   tags = {
     Name = "${var.app_name}-vc-${random_string.priority[each.key].result}-${var.env}"
     domain = "${var.app_name}${random_string.priority[each.key].result}.${var.zone_name}"
