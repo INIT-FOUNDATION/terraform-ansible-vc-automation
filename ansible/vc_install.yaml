@@ -43,6 +43,7 @@
       copy: src={{ item.src }} dest={{ item.dest }}
       with_items:
       - { src: 'assets/images/favicon.ico', dest: '/var/www/bigbluebutton-default/assets/favicon.ico' }
+      - { src: 'assets/index.html', dest: '/var/www/bigbluebutton-default/assets/index.html' }
       become: true
     
     - name: Removing Default Presentation
@@ -70,6 +71,16 @@
       notify:
       - Restart Freeswitch
       - Restart Bigbluebutton
+
+    - name: Creates Cron to clean log files
+      ansible.builtin.cron:
+        name: bbb-conf clean
+        special_time: "daily"
+        minute: "30"
+        hour: "18"
+        user: ec2-user
+        job: "sudo bbb-conf --clean"
+        cron_file: ansible_bbb-conf_clean
 
         #- name: Replace Domain in settings.yaml
         #replace:
