@@ -3,7 +3,7 @@ resource "aws_eip" "vc" {
   instance = aws_instance.vc[each.key].id
   vpc      = true
   tags = {
-    Name = "${var.app_name}-vc-${each.key}-${var.env}"
+    Name = "${var.app_name}-vc-${random_string.priority[each.key].result}-${var.env}"
     Stack = "PROD"
   }
 }
