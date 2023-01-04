@@ -2,6 +2,7 @@
   gather_facts: yes
   vars:
     vc_servers: []
+    bbb_version: focal-260-2.6.0-alpha.4
     ansible_aws_ssm_timeout: 3000
     ansible_aws_ssm_profile: default
     ansible_connection: aws_ssm
@@ -10,24 +11,28 @@
     vc_maintenance_email: "narsimachilkuri237@gmail.com"
     turn_server: "turn.aieze.in"
     turn_server_secret: "f167c5441530592cfe737811f0145c9e"
-    branch_name: feature/telemedicine
+    branch_name: feature/webcam_avatar
     git_username: narsimachilkuri-at-166274191221
     git_password: VO4bfY7r316OiKVwAzGiiMfruM8hEV0Da3%2FdCRktDTY%3D
-    git_repo_name: telemedicine-bbb
+    git_repo_name: aieze-bbb
 
   tasks:
     - name: Install BBB with Let's Encrypt certificate
-      shell: wget -qO- https://ubuntu.bigbluebutton.org/bbb-install-2.6.sh | sudo bash -s -- -w -v focal-260 -s {{ vc_domain }} -e {{ vc_maintenance_email }} -c {{ turn_server }}:{{ turn_server_secret }}
+      shell: wget -qO- https://ubuntu.bigbluebutton.org/bbb-install-2.6.sh | sudo bash -s -- -w -v {{ bbb_version }} -s {{ vc_domain }} -e {{ vc_maintenance_email }} -c {{ turn_server }}:{{ turn_server_secret }}
       become: true
-
+    
     - name: Remove BBB Demo
       ansible.builtin.apt:
         name: bbb-demo
         state: absent
       become: true
-    
-    - name: Clone Aieze BBB
-      shell: git clone https://{{ git_username }}:{{ git_password }}@git-codecommit.ap-south-1.amazonaws.com/v1/repos/{{ git_repo_name }} /home/ubuntu/{{ git_repo_name }}
+   
+    - name: Checkout Latest Code
+      ansible.builtin.git:
+        repo: https://{{ git_username }}:{{ git_password }}@git-codecommit.ap-south-1.amazonaws.com/v1/repos/{{ git_repo_name }}
+        dest: /home/ubuntu/{{ git_repo_name }}
+        version: "{{ branch_name }}"
+        force: yes
 
     - name: Change Kurento wsUrl
       shell: yq w -i /home/ubuntu/{{ git_repo_name }}/bigbluebutton-html5/private/config/settings.yml 'public.kurento.wsUrl' wss://{{ vc_domain }}/bbb-webrtc-sfu
@@ -45,15 +50,10 @@
       - { src: 'assets/images/favicon.ico', dest: '/var/www/bigbluebutton-default/assets/favicon.ico' }
       - { src: 'assets/index.html', dest: '/var/www/bigbluebutton-default/assets/index.html' }
       become: true
-    
+
     - name: Removing Default Presentation
       shell: rm /var/www/bigbluebutton-default/assets/default.pdf
       become: true
-        
-        #- name: Install BBB Webhooks
-        #ansible.builtin.apt:
-        #name: bbb-webhooks
-        #state: present
 
     - name: Take Backup of Audio Conference File
       shell: cp /opt/freeswitch/conf/autoload_configs/conference.conf.xml /opt/freeswitch/conf/autoload_configs/conference.conf.xml.bak
@@ -71,40 +71,6 @@
       notify:
       - Restart Freeswitch
       - Restart Bigbluebutton
-
-    - name: Creates Cron to clean log files
-      ansible.builtin.cron:
-        name: bbb-conf clean
-        special_time: "daily"
-        minute: "30"
-        hour: "18"
-        user: ec2-user
-        job: "sudo bbb-conf --clean"
-        cron_file: ansible_bbb-conf_clean
-
-        #- name: Replace Domain in settings.yaml
-        #replace:
-        #path: /usr/share/meteor/bundle/programs/server/assets/app/config/settings.yml
-        #regexp: 'domain_name'
-        #replace: '{{ vc_domain }}'
-        #notify: 
-        #- Restart Bigbluebutton
-
-        #- name: Store VC Secret
-        #shell: cat /etc/bigbluebutton/bbb-web.properties | grep securitySalt | cut -d= -f2
-        #register: vc_secret
-
-      #- name: List of VC servers data
-      #set_fact:
-      # vc_servers: "{{ vc_servers: }} + [ { 'vc_secret': {{ vc_secret }},
-      #                   'vc_domain': {{ vc_domain }} }] ]" 
-    
-      #- name: Creating Scalelite configuration
-      #template:
-      #  src: vc_config/scalelite.j2
-      #  dest: vc_config/scalelite.yml
-      #  mode: 0775
-      #delegate_to: localhost
 
   handlers:
     - name: Restart Bigbluebutton

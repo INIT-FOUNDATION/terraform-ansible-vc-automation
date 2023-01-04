@@ -1,0 +1,16 @@
+- hosts: all
+  gather_facts: yes
+  vars:
+    ansible_aws_ssm_timeout: 3000
+    ansible_aws_ssm_profile: default
+    ansible_connection: aws_ssm
+    ansible_aws_ssm_region: ap-south-1
+    ansible_aws_ssm_bucket_name: aieze-prod
+    branch_name: feature/chat_ui_changes
+    git_username: narsimachilkuri-at-166274191221
+    git_password: VO4bfY7r316OiKVwAzGiiMfruM8hEV0Da3%2FdCRktDTY%3D
+    git_repo_name: aieze-bbb
+
+  tasks:
+    - name: Remove Existing Virtual Background ImaGES
+      shell: bbb-conf --clean
