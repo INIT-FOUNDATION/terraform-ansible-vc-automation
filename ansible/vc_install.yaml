@@ -15,6 +15,7 @@
     git_username: narsimachilkuri-at-166274191221
     git_password: VO4bfY7r316OiKVwAzGiiMfruM8hEV0Da3%2FdCRktDTY%3D
     git_repo_name: aieze-bbb
+    allow_requests_without_session: true
 
   tasks:
     - name: Install BBB with Let's Encrypt certificate
@@ -64,6 +65,12 @@
       with_items:
       - { src: '../vc_config/conference.conf.xml', dest: '/opt/freeswitch/conf/autoload_configs/conference.conf.xml' }
       become: true
+
+    - name: Change BBB Properties of Session Validation
+      replace:
+        path: /usr/share/bbb-web/WEB-INF/classes/bigbluebutton.properties
+        regexp: 'allowRequestsWithoutSession=false'
+        replace: "allowRequestsWithoutSession={{ allow_requests_without_session }}"
 
     - name: Replace Content of Sip Nginx
       shell: sed -i 's/http:/https:/g; s/5066/7443/g' /usr/share/bigbluebutton/nginx/sip.nginx
