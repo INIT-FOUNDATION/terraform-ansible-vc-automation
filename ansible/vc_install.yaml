@@ -11,7 +11,7 @@
     vc_maintenance_email: "narsimachilkuri237@gmail.com"
     turn_server: "turn.aieze.in"
     turn_server_secret: "f167c5441530592cfe737811f0145c9e"
-    branch_name: feature/webcam_avatar
+    branch_name: link_basic_plan_production
     git_username: narsimachilkuri-at-166274191221
     git_password: VO4bfY7r316OiKVwAzGiiMfruM8hEV0Da3%2FdCRktDTY%3D
     git_repo_name: aieze-bbb
@@ -48,8 +48,8 @@
     - name: Replacing Favicon
       copy: src={{ item.src }} dest={{ item.dest }}
       with_items:
-      - { src: 'assets/images/favicon.ico', dest: '/var/www/bigbluebutton-default/assets/favicon.ico' }
-      - { src: 'assets/index.html', dest: '/var/www/bigbluebutton-default/assets/index.html' }
+      - { src: 'assets/images/favicon.ico', dest: '/var/www/bigbluebutton-default/favicon.ico' }
+      - { src: 'assets/index.html', dest: '/var/www/bigbluebutton-default/index.html' }
       become: true
 
     - name: Removing Default Presentation
